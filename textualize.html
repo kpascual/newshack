@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+    <title>Newshack - Textualize</title>
+    <link rel='stylesheet' type='text/css' href="viz.css" />
+</head>
+<body>
+    <h1>Textualize</h1>
+    <strong>Journalist's Editing Tool</strong><br />
+
+
+    <div id="viz">
+    </div>
+    <div id="add_info">
+        <div class='padding'>
+            <p>
+                <strong>Add Annotation</strong>
+            </p>
+            <p>
+                <strong>Label</strong><br />
+                <input type='text' name='label' size='25'/>
+            </p>
+            <p>
+                <strong>Caption</strong><br />
+                <textarea name='caption' rows=6 cols=20></textarea>
+            </p>
+
+
+            <strong>Data</strong><br />
+
+            <div id="current_data">
+            </div>
+            <div id="current_datapoint_index">
+            </div>
+            <div id="current_dataset_index">
+            </div>
+            <div id="current_series">
+            </div>
+
+            <p>
+                <input type="button" id="add_info_submit" value="Add Annotation" />
+                <input type="button" id="add_info_close" value="Close" />
+            </p>
+        </div>
+    </div>
+
+    <div id="add_info_range">
+        <div class='padding'>
+            <p>
+                <strong>Add Range Annotation</strong>
+            </p>
+            <p>
+                <strong>Label</strong><br />
+                <input type='text' name='label_range' size='25'/>
+            </p>
+            <p>
+                <strong>Caption</strong><br />
+                <textarea name='caption_range' rows=6 cols=20></textarea>
+            </p>
+
+
+            <strong>Data</strong><br />
+
+            <div id="range_values">
+            </div>
+
+            <p>
+                <input type="button" id="add_info_range_submit" value="Add Range Annotation" />
+                <input type="button" id="add_info_range_close" value="Close" />
+            </p>
+        </div>
+    </div>
+    <div style='clear:both'></div>
+    <p>
+        <input type='file' id='choose_file'/>
+    </p>
+    
+    <script type="text/javascript" src="jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" src="d3.v2.min.js"></script>
+    <script type="text/javascript" src="viz.js"></script>
+    <script type='text/javascript'>
+
+        var json_data = {};
+        var range_annotations = [];
+        // range annotation item: {'label':'','caption':'','range':[x0,x1]}
+
+        var radius_with_annotation = 10;
+        var radius_highlighted = 10;
+        var radius_general = 4;
+
+        var stroke_width_with_annotation = 5;
+        var stroke_width_general = 2;
+
+        var line_color = "#777";
+        var data_circle_color = "none";
+
+        var x_pixel_min = 40, x_pixel_max = 700;
+        var y_pixel_min = 20, y_pixel_max = 300;
+
+        var x_domain = [1950,2011]
+        var y_domain = [0,5]
+
+        var x_scale = d3.scale.linear().range([x_pixel_min,x_pixel_max]).domain([x_domain[0],x_domain[1]]);
+        var y_scale = d3.scale.linear().range([y_pixel_min,y_pixel_max]).domain([y_domain[1],y_domain[0]]);
+
+        var svg_height = 500;
+
+        var linegraph = d3.svg.line()
+            .x(function(d){return x_scale(d.x)})
+            .y(function(d){return y_scale(d.value)});
+
+        function drawGraphElements(x_series) {
+            // Create line graphs 
+            for (series_name in json_data) {
+                if (series_name != x_series) {
+                    createLineGraph(series_name, json_data[series_name]);
+                    createAnnotatableDatapoints(series_name, json_data[series_name]);
+                }
+            }
+        };
+    
+        function createLineGraph(series_name, datapoints) {
+
+
+            for (i in datapoints) {
+                datapoints[i]['series_name'] = series_name;
+            }
+            data = datapoints;
+
+            group = svg.append("g")
+                .attr("id","series_" + series_name);
+
+            group
+                .append("svg:path")
+                .data(data)
+                .attr("class","linegraph")
+                .attr("d",function(d){return linegraph(data);})
+                .attr("fill","none")
+                .attr("stroke-width",3)
+                .attr("stroke",line_color);
+
+
+        }
+
+        function createAnnotatableDatapoints(series_name, datapoints) {
+            group = svg.selectAll("#series_" + series_name);
+
+            for (i in datapoints) {
+                datapoints[i]['series_name'] = series_name;
+            }
+            data = datapoints;
+
+            group.selectAll(".datapoint")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("cx",function(d){return x_scale(d.x)})
+                .attr("cy",function(d){return y_scale(d.value)})
+                .attr("fill",data_circle_color)
+                .attr("stroke-width",function(d){
+                    if (d.hasOwnProperty('annotations') && d.annotations.length > 0) {
+                        return stroke_width_with_annotation;
+                    } else {
+                        return stroke_width_general;
+                    }
+                })
+                .attr("stroke",function(d){
+                    if (d.hasOwnProperty('annotations') && d.annotations.length > 0) {
+                        return "red";
+                    } else {
+                        return line_color;
+                    }
+                })
+                .attr("r",function(d){
+                    if (d.hasOwnProperty('annotations') && d.annotations.length > 0) {
+                        return radius_with_annotation;
+                    } else {
+                        return radius_general;
+                    }
+                })
+                .attr("class","datapoint")
+                .on("mouseover",function(d){
+                    d3.select(this)
+                        .transition()
+                        .duration(250)
+                        .attr("fill","orange")
+                        .attr("r",radius_highlighted)
+                        .attr("cursor","pointer");
+                    
+                })
+                .on("mouseout",function(d){
+                    d3.select(this)
+                        .transition()
+                        .duration(250)
+                        .attr("fill",data_circle_color)
+                        .attr("r",radius_general);
+                })
+                .on("click",function(d,i){
+                    $("#add_info").show(200);
+                    $("#current_data").html(JSON.stringify(d));
+                    $("#current_datapoint_index").html(i);
+                    $("#current_series").html(d.series_name);
+                });
+
+        }
+
+        function addEventsToAnnotationButtons() {
+            /* Two wars of closing the modal: hit the close button, and pressing ESC */
+            $("#add_info_close").click(function(){
+                $("#add_info").hide(200);
+            });
+            $("#add_info_range_close").click(function(){
+                $("#add_info_range").hide(200);
+            });
+            $(document).keydown(function(e) {
+                switch (e.which) {
+                    case 27: 
+                        if ($("#add_info").is(":visible")) $("#add_info").hide(200);
+                        if ($("#add_info_range").is(":visible")) $("#add_info_range").hide(200);
+                }
+            });
+
+            $("#add_info_submit").click(function(){
+                label_value = $("input[name='label']").attr('value');
+                caption_value = $("textarea[name='caption']").attr('value'); 
+                data_index_value = $("#current_datapoint_index").html();
+                series_index_value = $("#current_series").html();
+
+                json_data[series_index_value][data_index_value]['annotations'].push({'label':label_value,'caption':caption_value});
+
+                console.log(json_data);
+                saveData('datapoint',json_data);
+                updateDatapointAnnotations(series_index_value);
+            });
+            $("#add_info_range_submit").click(function(){
+                label_value = $("input[name='label_range']").attr('value');
+                caption_value = $("textarea[name='caption_range']").attr('value'); 
+                range_data = jQuery.parseJSON($("#range_values").html());
+                range_annotations.push({'label':label_value,'caption':caption_value,'range':range_data});
+                //console.log(range_annotations);
+                saveData('range',{'label':label_value,'caption':caption_value,'range':range_data});
+
+                updateRangeAnnotations()
+
+            });
+
+        }
+
+        function saveData(save_type, data) {
+            $.ajax({
+                type: 'POST',
+                url: 'save.php',
+                data: {'type':save_type,'data':data},
+                dataType: "text"
+            }).done(function(data){
+                console.log(data);
+            });
+
+        }
+
+
+
+        /*
+        d3.json("delta.json",function(val){
+            json_data = val;
+
+            // Add annotations
+            for (i in json_data) {
+                for (j in json_data[i]) {
+                    json_data[i][j]['annotations'] = [];
+                }
+            }
+
+            // Create line graphs 
+            for (series_name in json_data) {
+                createLineGraph(series_name, json_data[series_name]);
+            }
+        });
+        */
+
+
+
+
+        $(document).ready(function(){
+
+            svg = d3.select("#viz").append("svg");
+            drawAxes(svg);
+            addEventsToAnnotationButtons();
+
+            readFile('Delta-Info-final.csv','year');
+
+            brush = d3.svg.brush()
+                .on("brushstart", brushstart)
+                .on("brush", brushmove)
+                .on("brushend", brushend);
+
+            function brushstart() {
+                svg.classed("selecting", true);
+            }
+
+            function brushmove() {
+                var s = d3.event.target.extent();
+                //circle.classed("selected", function(d) { return s[0] <= d && d <= s[1]; });
+            }
+
+            function brushend() {
+                var s = d3.event.target.extent();
+                console.log(s);
+                svg.classed("selecting", !d3.event.target.empty());
+
+                $("#add_info_range").show(200);
+                $("#range_values").html(JSON.stringify(s));
+            }
+
+            // Add brush
+            svg.append("g")
+                .attr("class", "brush")
+                .call(brush.x(x_scale)
+                    )
+              .selectAll("rect")
+                .attr("height",500);
+
+            $("#choose_file").change(function(e){
+                var files = e.target.files;
+                var file1 = files[0];
+                var reader = new FileReader();
+                textstring = reader.readAsText(file1);
+                
+                console.log(textstring);
+                /*
+                reader.onload(e);
+                reader.onerror(e);
+
+                */
+            });
+                        
+
+        });
+    </script>
+
+  </body>
+</html>
