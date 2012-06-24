@@ -4,16 +4,30 @@ function drawAxes(svg) {
         .attr("id", "xaxis")
         .attr("transform", "translate(0," + y_scale(0) + ")")
         .attr("fill","none")
-        .attr("stroke","black")
-        .call(d3.svg.axis().ticks(6).scale(x_scale).orient("bottom"));
+        .attr("stroke","gray")
+        .call(d3.svg.axis().ticks(6).scale(x_scale).orient("bottom").tickFormat(d3.format("d")));
 
     svg.append("g")
         .attr("id", "yaxis")
         .attr("fill","none")
-        .attr("stroke","black")
+        .attr("stroke","gray")
         .attr("transform", "translate(" + x_scale(x_domain[0]) + ",0)")
         .call(d3.svg.axis().ticks(4).scale(y_scale).orient("left"));
 
+    svg.append("text")
+        .text("Year")
+        .attr("fill","black")
+        .attr("font-size",22)
+        .attr("x",300)
+        .attr("y",400);
+
+    svg.append("text")
+        .text("Year")
+        .attr("fill","black")
+        .attr("font-size",22)
+        .attr("x",2)
+        .attr("y",200)
+        .attr("transform","rotate(90)");
 }
 
 
@@ -22,7 +36,7 @@ function loadRangeAnnotations() {
         range_annotations = val;
         console.log(range_annotations);
         updateRangeAnnotations(range_annotations);
-        
+        addRangeEvents();
     });
 }
 
@@ -34,6 +48,7 @@ function loadDataPointAnnotations() {
             createAnnotatableDatapoints(i,json_data[i]);
             //updateDatapointAnnotations(i);
         }
+
 
     });
 
@@ -116,6 +131,7 @@ function updateRangeAnnotations(range_data) {
         .attr("x",function(d){return x_scale(d.range[0])})
         .attr("y",0)
         .attr("fill","#ccc")
+        .attr("cursor","pointer")
         .attr("width",function(d){return x_scale(d.range[1]) - x_scale(d.range[0])})
         .attr("height",y_scale(0))
         .on("mouseover",function(d){
@@ -123,6 +139,6 @@ function updateRangeAnnotations(range_data) {
         })
         .on("mouseout",function(d){
             d3.select(this).attr("fill","#ccc");
-        });
+        })
 
 }

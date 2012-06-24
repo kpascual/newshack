@@ -1,3 +1,6 @@
+body {
+    font-family: Helvetica, Arial, sans-serif;
+}
 
 #viz {float: left}
 svg {
@@ -13,7 +16,7 @@ svg {
     display: none;
 }
 #add_info, #add_info_range {
-    height: 350px;
+    height: 450px;
 }
 
 .padding {

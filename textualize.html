@@ -9,7 +9,6 @@
     <h1>Textualize</h1>
     <strong>Journalist's Editing Tool</strong><br />
 
-
     <div id="viz">
     </div>
     <div id="add_info">
@@ -75,6 +74,11 @@
     <p>
         <input type='file' id='choose_file'/>
     </p>
+
+    <div id='series'>
+
+    </div>
+    <a href='textualize_users.html'>User View</a>
     
     <script type="text/javascript" src="jquery-1.7.2.min.js"></script>
     <script type="text/javascript" src="d3.v2.min.js"></script>
@@ -95,11 +99,11 @@
         var line_color = "#777";
         var data_circle_color = "none";
 
-        var x_pixel_min = 40, x_pixel_max = 700;
-        var y_pixel_min = 20, y_pixel_max = 400;
+        var x_pixel_min = 40, x_pixel_max = 620;
+        var y_pixel_min = 20, y_pixel_max = 350;
 
         var x_domain = [1950,2011]
-        var y_domain = [0,5]
+        var y_domain = [0,8]
 
         var x_scale = d3.scale.linear().range([x_pixel_min,x_pixel_max]).domain([x_domain[0],x_domain[1]]);
         var y_scale = d3.scale.linear().range([y_pixel_min,y_pixel_max]).domain([y_domain[1],y_domain[0]]);
@@ -232,6 +236,7 @@
                 console.log(json_data);
                 saveData('datapoint',json_data);
                 updateDatapointAnnotations(series_index_value);
+                $("#add_info").hide(200);
             });
             $("#add_info_range_submit").click(function(){
                 label_value = $("input[name='label_range']").attr('value');
@@ -242,6 +247,7 @@
                 saveData('range',{'label':label_value,'caption':caption_value,'range':range_data});
 
                 updateRangeAnnotations(range_annotations)
+                $("#add_info_range").hide(200);
 
             });
 
@@ -280,7 +286,9 @@
         */
 
 
-
+        function addRangeEvents() { 
+            return false;
+        }
 
         $(document).ready(function(){
 
@@ -288,7 +296,7 @@
             drawAxes(svg);
             addEventsToAnnotationButtons();
 
-            readFile('Delta-Info-final.csv','year');
+            readFile('aggregate_water_exports.csv','year');
 
             brush = d3.svg.brush()
                 .on("brushstart", brushstart)
@@ -335,7 +343,13 @@
 
                 */
             });
-                        
+            setTimeout(
+                function() {
+                    for (i in json_data) {
+                        newel = $("<strong>" + i + "</strong> <input type='text' size='20' />");
+                        $("#series").append(newel);
+                    }                        
+                }, 5000);
 
         });
     </script>
