@@ -96,7 +96,7 @@
         var data_circle_color = "none";
 
         var x_pixel_min = 40, x_pixel_max = 700;
-        var y_pixel_min = 20, y_pixel_max = 300;
+        var y_pixel_min = 20, y_pixel_max = 400;
 
         var x_domain = [1950,2011]
         var y_domain = [0,5]
@@ -241,7 +241,7 @@
                 //console.log(range_annotations);
                 saveData('range',{'label':label_value,'caption':caption_value,'range':range_data});
 
-                updateRangeAnnotations()
+                updateRangeAnnotations(range_annotations)
 
             });
 
@@ -321,6 +321,7 @@
               .selectAll("rect")
                 .attr("height",500);
 
+            loadRangeAnnotations();           
             $("#choose_file").change(function(e){
                 var files = e.target.files;
                 var file1 = files[0];

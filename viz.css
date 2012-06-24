@@ -2,16 +2,18 @@
 #viz {float: left}
 svg {
   font: 10px sans-serif;
-  width: 800px; height: 600px;
+  width: 660px; height: 600px;
 }
 
 #add_info, #add_info_range, #info {
     border-radius: 6px;
     border: 2px solid gray;
     width: 200px;
-    height: 400px;
     float: left;
     display: none;
+}
+#add_info, #add_info_range {
+    height: 350px;
 }
 
 .padding {
